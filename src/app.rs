@@ -279,8 +279,18 @@ impl App {
             .collect();
         modules.sort_by(|a, b| b.heat.cmp(&a.heat));
 
+        // Parse repo name from URL (e.g., https://github.com/owner/repo/pull/123)
+        let repo_name = info
+            .url
+            .trim_start_matches("https://github.com/")
+            .split("/pull/")
+            .next()
+            .unwrap_or("Unknown Repo")
+            .to_string();
+
+        // Populate Dashboard
         self.dashboard_info = DashboardInfo {
-            repo_name: info.head_repository.name_with_owner.clone(),
+            repo_name,
             branch_name: format!("#{}", info.number),
             description: info.title.clone(),
             stats: format!(

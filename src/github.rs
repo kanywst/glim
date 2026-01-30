@@ -9,20 +9,12 @@ pub struct PrInfo {
     pub body: String,
     pub state: String,
     pub author: Author,
-    #[serde(rename = "headRepository")]
-    pub head_repository: RepoInfo,
+    pub url: String,
     #[serde(rename = "changedFiles")]
     pub changed_files: u64,
     pub additions: u64,
     pub deletions: u64,
     pub files: Vec<PrFile>,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct RepoInfo {
-    pub name: String,
-    #[serde(rename = "nameWithOwner")]
-    pub name_with_owner: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -69,7 +61,7 @@ impl GitHubClient {
             .arg("view")
             .arg(pr_ref)
             .arg("--json")
-            .arg("number,title,body,state,author,headRepository,changedFiles,additions,deletions,files")
+            .arg("number,title,body,state,author,url,changedFiles,additions,deletions,files")
             .output()
             .context("Failed to fetch PR info")?;
 

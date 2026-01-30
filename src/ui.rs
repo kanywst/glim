@@ -1,7 +1,7 @@
 use crate::app::{App, InputMode, ZoomLevel};
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Cell, List, ListItem, Paragraph, Row, Table, Wrap},
@@ -36,32 +36,36 @@ fn render_header(app: &App, frame: &mut Frame, area: Rect) {
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Cyan));
 
-    // Right-aligned status info
-    let status = format!(
-        " {} - {} ",
-        app.dashboard_info.repo_name, app.dashboard_info.branch_name
-    );
+    // Create an inner area for content to avoid border overlap issues
+    let inner_area = block.inner(area);
+
+    // Render the border block first
+    frame.render_widget(block, area);
+
+    // Split inner area into Left (Title) and Right (Status)
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(inner_area);
+
+    // Left: Title
     let title_span = Span::styled(
         title,
         Style::default()
             .add_modifier(Modifier::BOLD)
             .fg(Color::White),
     );
+    frame.render_widget(Paragraph::new(title_span), chunks[0]);
 
-    // Calculate lengths before moving status
-    let width = area.width as usize;
-    let title_len = title.len();
-    let status_len = status.len();
+    // Right: Status (Right Aligned)
+    let status = format!(
+        "{} - {}",
+        app.dashboard_info.repo_name, app.dashboard_info.branch_name
+    );
+    let status_paragraph = Paragraph::new(Span::styled(status, Style::default().fg(Color::Gray)))
+        .alignment(Alignment::Right);
 
-    let status_span = Span::styled(&status, Style::default().fg(Color::Gray));
-
-    let spacer_len = width.saturating_sub(title_len + status_len + 4); // 4 for borders/padding
-    let spacer = " ".repeat(spacer_len);
-
-    let line = Line::from(vec![title_span, Span::raw(spacer), status_span]);
-
-    let paragraph = Paragraph::new(line).block(block);
-    frame.render_widget(paragraph, area);
+    frame.render_widget(status_paragraph, chunks[1]);
 }
 
 fn render_main(app: &App, frame: &mut Frame, area: Rect) {
